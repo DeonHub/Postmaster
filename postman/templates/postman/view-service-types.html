@@ -1,0 +1,49 @@
+{% extends 'postman/base.html' %}
+ 
+{% block content %}
+{% comment %} {% if unlimited %} {% endcomment %}
+<a href="{% url 'postman:createServiceType' %}"><button class="btn btn-sm fee-type" id="fee-type" style="background-color: #f7941d"><p>Add Service Type</p></button></a>
+{% comment %} {% endif %} {% endcomment %}
+
+
+
+<!-- Button trigger modal -->
+<div class="table-responsive-md">
+
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Service Type</th>
+            <th>Unit Cost(USD)</th>
+            <th>Unit Cost(GHS)</th>
+            <th>Last Updated</th>
+            {% comment %} {% if unlimited %} {% endcomment %}
+            <th></th>
+            <th></th>
+            {% comment %} {% endif %} {% endcomment %}
+        </tr>
+    </thead>
+    <tbody>
+      {% csrf_token %}
+
+        {% for service in services %}
+
+        <tr id="{{ size.id }}">
+           
+            <td>{{ service.service_type }}</td>
+            <td>{{ service.unit_amount_usd }}</td>
+            <td>{{ service.unit_amount_ghs }}</td>
+            <td>{{ service.date_created }}</td>
+            {% comment %} {% if unlimited %} {% endcomment %}
+            <td><a href="{% url 'postman:editServiceType' id=service.id %}"><button type="button" class="btn btn-primary btn-sm">Edit</button></a></td>
+            <td><a href="{% url 'postman:deleteServiceType' id=service.id %}" class="service-delete" id="{{ service.id }}"><button class="btn btn-danger btn-sm">Delete</button></a></td>
+            {% comment %} {% endif %} {% endcomment %}
+        </tr>
+        {% empty %}
+        <h4>Add service types to view them here</h4>
+        {% endfor %}
+    </tbody>
+</table>
+
+</div>   
+{% endblock %}

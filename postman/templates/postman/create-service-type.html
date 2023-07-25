@@ -1,0 +1,55 @@
+{% extends 'postman/base.html' %}
+
+{% block content %}
+
+<div class="form-body" style="margin-top:-10%;">
+    <div class="row fee_type">
+        <div class="form-holder">
+            <div class="form-content">
+                <div class="form-items">
+                    <h2 class="text-center mb-3" >Add Service Type</h2>
+                    <form class="" action="" method="post" enctype="multipart/form-data">
+
+                        {% csrf_token %}
+                        <div class="mt-3">
+                           <input class="form-control" type="text" id="services" name="services" placeholder="Enter service type..." title="Seperate multiple sizes by comma" required>
+                        </div>
+
+
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                <div class="input-group">
+                                      <label class="input-group-text">Unit cost(USD)</label>
+                                      <input class="form-control " type="number" id="unit_amount_usd" name="unit_amount_usd" placeholder="Enter unit amount(USD)" oninput="getData()" required>
+                                  </div>
+                             </div>
+            
+                        <div class="col">
+                          <div class="input-group">
+                              <label class="input-group-text">Unit cost(GHS)</label>
+                              <input class="form-control " type="number" id="unit_amount_ghs" name="unit_amount_ghs" placeholder="Enter unit amount(GHS)" readonly>
+                          </div>
+                        </div>
+            
+                        
+                        </div>
+
+
+                        <div class="mt-3 text-center">
+                            <a onclick="window.history.go(-1); return false;"><button type="button" class="btn btn-primary btn-sm mr-3" >Back</button></a>
+
+                            <button id="submit" type="submit" class="btn btn-sm ml-3" style="background-color: #006c40; color: #fff">Submit</button>
+                        </div>
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

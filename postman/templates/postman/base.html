@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width">
+
+
+      <title>Postmaster</title>
+
+        {% load static %}
+        {% comment %} {% load pwa %}
+        {% progressive_web_app_meta %} {% endcomment %}
+        {% comment %} {% load crispy_forms_tags %} {% endcomment %}
+        
+        <script src="{% static 'postman/js/script.js' %}"></script>
+        <script src="{% static 'postman/js/side.js' %}"></script>
+        <link rel="icon" href="{% static 'postman/media/favicon.jpg' %}" type="image/jpg" />
+
+        <link rel="stylesheet" href="{% static 'postman/css/style.css' %}" media="all">
+        <link rel="stylesheet" href="{% static 'postman/css/styles.css' %}" media="all">
+        <link rel="stylesheet" href="{% static 'postman/css/side.css' %}" media="all">
+        
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.8.0/dist/chart.min.js"></script>
+        {% comment %} <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script> {% endcomment %}
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous"> 
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+        <style>
+          {% block style %}
+          
+          {% endblock %}
+        </style>
+        
+    </head>
+   
+    <body>
+
+
+      <div class="d-flex" id="wrapper">
+        
+        {% comment %} <!-- Sidebar--> {% endcomment %}
+        <div class="border-end" id="sidebar-wrapper">
+            <div class="sidebar-heading border-bottom text-center"><a href="{% url 'postman:index' %}">
+              {% comment %} <span class="material-symbols-outlined">paid</span><p>Fee Management System</p> {% endcomment %}
+              <img src="{% static 'postman/media/aks.jpg' %}" alt="logo" />
+            </a>
+          </div>
+            <div class="text-center mt-3 mb-3">
+              {{ date }}<br/>
+              {{ time }}
+            </div>
+            <hr/>
+            <div class="list-group list-group-flush ">
+                <a class="list-group-item list-group-item-action" href="{% url 'postman:index' %}"><span class="material-symbols-outlined">speed</span><p>Dashboard</p></a>
+                <a class="list-group-item list-group-item-action" href="{% url 'postman:viewServiceTypes' %}"><span class="material-symbols-outlined">view_kanban</span><p>Service Types</p></a>
+                {% comment %} <a class="list-group-item list-group-item-action" href="{% url 'superuser:viewMembershipSizes' %}"><span class="material-symbols-outlined">view_kanban</span><p>Membership Sizes</p></a> {% endcomment %}
+                {% comment %} <a class="list-group-item list-group-item-action" href="{% url 'superuser:viewFeeItems' %}"><span class="material-symbols-outlined">list_alt</span><p>Fee Items</p></a>
+                <a class="list-group-item list-group-item-action" href="{% url 'superuser:viewFeeDescription' %}"><span class="material-symbols-outlined">description</span><p>Fee Descriptions</p></a>
+                {% comment %} <a class="list-group-item list-group-item-action" href="{% url 'superuser:viewCurrency' %}"><span class="material-symbols-outlined">payments</span><p>Currencies</p></a> {% endcomment %}
+                {% comment %} <a class="list-group-item list-group-item-action" href="{% url 'superuser:viewModuleFees' %}"><span class="material-symbols-outlined">manage_accounts</span><p>Module Fees</p></a> 
+                <a class="list-group-item list-group-item-action" href="{% url 'superuser:accountSubscription' %}"><span class="material-symbols-outlined">receipt</span><p>Account Subscription</p></a>
+                <a class="list-group-item list-group-item-action" href="{% url 'superuser:specialSubscription' %}"><span class="material-symbols-outlined">receipt</span><p>Special Subscription</p></a>
+                <a class="list-group-item list-group-item-action" href="{% url 'superuser:specialSubscriptionHistory' %}"><span class="material-symbols-outlined">receipt_long</span><p>Special Sub. History</p></a> {% endcomment %}
+                {% comment %} <a class="list-group-item list-group-item-action" href="{% url 'superuser:viewPaymentDuration' %}"><span class="material-symbols-outlined">view_timeline</span><p>Assigned Fees</p></a>  {% endcomment %} 
+                {% comment %} <a class="list-group-item list-group-item-action" href="{% url 'superuser:subscriptionHistory' %}"><span class="material-symbols-outlined">receipt_long</span><p>Subscription History</p></a> {% endcomment %}
+                {% comment %} <a class="list-group-item list-group-item-action" href="{% url 'superuser:send_sms' %}"><span class="material-symbols-outlined">send</span><p>Send Message</p></a> {% endcomment %}
+
+                {% comment %} <a class="list-group-item list-group-item-action" href="#"><span class="material-symbols-outlined">card_membership</span><p>Certification</p></a>
+                {% if unlimited %}
+                <a class="list-group-item list-group-item-action" href="{% url 'superuser:viewMembers' %}"><span class="material-symbols-outlined">group</span><p>Members</p></a>
+                <a class="list-group-item list-group-item-action" href="{% url 'superuser:viewSubscribers' %}"><span class="material-symbols-outlined">group</span><p>Subscribers</p></a>
+                <a class="list-group-item list-group-item-action" href="{% url 'superuser:viewDonations' %}"><span class="material-symbols-outlined">loyalty</span><p>Member Donations</p></a>
+                <a class="list-group-item list-group-item-action" href="{% url 'superuser:viewPublicDonations' %}"><span class="material-symbols-outlined">volunteer_activism</span><p>Public Donations</p></a>
+                <a class="list-group-item list-group-item-action" href="https://www.youtube.com/playlist?list=PL94Wg7vEQie4EojeY5BGDkR2I0Zyy9Ufa" target="_blank"><span class="material-symbols-outlined">smart_display</span><p>Video Tutorials</p></a>
+                <a class="list-group-item list-group-item-action" href="{% url 'superuser:viewActivityLog' %}"><span class="material-symbols-outlined">edit</span><p>Activity Log</p></a>
+                {% endif %} {% endcomment %}
+            </div>
+        </div>
+
+
+        {% comment %} <!-- Page content wrapper--> {% endcomment %}
+        <div id="page-content-wrapper">
+            {% comment %} <!-- Top navigation--> {% endcomment %}
+            <nav class="navbar navbar-expand-lg navbar-light bg-dark border-bottom">
+                <div class="container-fluid">
+                    <button class="btn btn-sm" id="sidebarToggle" style="background-color: #f7941d"><span class="material-symbols-outlined">menu</span></button>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+
+                    <div class="d-flex flex-column ml-3 mt-3 mb-2 text-light demo" id="demo" style="text-align: center;width:100%;">
+                         <h4>{{ organization }}</h4>
+                         {% if branch == 1 %}
+                         <h6>Branch: Main Branch</h6>
+                         {% else %}
+                         <h6>Branch: Other Branch</h6>
+                         {% endif %}
+                    </div>
+                    
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
+                          {% comment %} <li class="nav-item active"><a class="nav-link" href="{% url 'superuser:viewDonations' %}"><button class="btn btn-sm"  style="background-color: #fb8c00; color: #000">Donations</button></a></li> {% endcomment %}
+
+                            {% comment %} <li class="nav-item active"><a class="nav-link" href="{% url 'superuser:send_sms' %}"><button class="btn btn-sm"  style="background-color: #006c40; color: #fff">Send SMS</button></a></li> {% endcomment %}
+                            {% comment %} <li class="nav-item active"><a class="nav-link" href="#!">Home</a></li> {% endcomment %}
+                            {% comment %} <li class="nav-item"><a class="nav-link" href="#!">Link</a></li> {% endcomment %}
+
+                            {% comment %} <div class="dropdown">
+                              <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="material-symbols-outlined">account_circle</span>
+                              </button>
+                              <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                <li><a class="dropdown-item" href="#">Action</a></li>
+                                <li><a class="dropdown-item" href="#">Another action</a></li>
+                                <div class="dropdown-divider"></div> 
+
+                                <li><a class="dropdown-item" href="#">Something else here</a></li>
+                              </ul>
+                            </div> {% endcomment %}
+
+                            <li class="nav-item dropdown">
+
+                              <div class="dropdown" >
+                                <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" >
+                                  <span class="material-symbols-outlined">account_circle</span>
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                  <li><a class="dropdown-item" href="#">Profile</a></li>
+                                  <div class="dropdown-divider"></div> 
+  
+                                  <li><a class="dropdown-item" href="#" onclick="memberOut()">Log Out</a></li>
+                                </ul>
+                              </div>
+
+
+                                {% comment %} <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="material-symbols-outlined">account_circle</span></a>
+                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{% url 'superuser:viewProfile' %}">Profile</a>
+                                    <div class="dropdown-divider"></div> 
+
+                                    <a class="dropdown-item" href="{% url 'superuser:logout' %}" onclick="memberOut()">Log Out</a>
+                                   
+                                </div> {% endcomment %}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+
+            {% comment %} <!-- Page content--> {% endcomment %}
+            <div class="container-fluid">
+
+                {% block content %}
+
+                {% endblock %}
+            </div>
+ 
+        </div>
+
+    </div>
+
+ 
+
+
+{% comment %} 
+      <footer>
+          <div class="pull-right">
+              Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com">Colorlib</a>
+          </div>
+          <div class="clearfix"></div>
+      </footer> {% endcomment %}
+
+      
+    {% comment %} <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script> {% endcomment %}
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+
+    <script>
+      {% if messages %}
+      {% for msg in messages %}
+        swal('{{ msg }}');
+
+      {% endfor %}
+
+    window.localStorage.setItem('token', '1fe8480feff19495f8799e2133d7e60fe8a7628fdbe9416e467343a49978d3c5');
+    {% endif %}
+    </script>
+
+<script>
+
+  $(document).ready(function(){
+    $('#delete_button').click(function(){
+      var id = [];
+      var url = $("#delete_button").attr("data-delete-url");
+      var csrf = $('input[name=csrfmiddlewaretoken]').val()
+
+      $(':checkbox:checked').each(function(i){
+        id[i]=$(this).val()
+      })
+
+      if(id.length == 0){
+        alert("Please select item to delete")
+      }
+      else{
+        if(confirm("Are you sure you want to delete this item?")){
+
+          $.ajax({
+            url: url,
+            method: "POST",
+            data: {
+              id,
+              csrfmiddlewaretoken: csrf
+            },
+            success: function(response){
+              for(var i=0; i<id.length; i++){
+                $('tr#'+id[i]+'').css('background-color', '#ccc');
+                $('tr#'+id[i]+'').fadeOut('slow');
+              }
+            } 
+          })   
+    }
+
+  }
+  })
+})
+
+
+
+{% comment %} Delete fee type {% endcomment %}
+$(document).ready(function(){
+   $('.link-delete').on('click', function(e) {
+    e.preventDefault()
+    
+    var $this = $(this)
+    var id = $this.attr("id")
+    var csrf = $('input[name=csrfmiddlewaretoken]').val()
+
+
+    if(confirm("Are you sure you want to delete this item?")){
+      $.ajax({
+        url: $this.attr("href"),
+        method: "POST",
+        data: {
+          id,
+          csrfmiddlewaretoken: csrf
+        },
+        success: function(resp){
+          for(var i=0; i<100; i++){
+            $('tr#'+id+'').css('background-color', '#ccc');
+            $('tr#'+id+'').fadeOut('slow');
+          }          
+        },
+      });
+    }
+    return false;
+   }) 
+})
+
+
+$(document).ready(function(){
+  $('.service-delete').on('click', function(e) {
+   e.preventDefault()
+   
+   var $this = $(this)
+   var id = $this.attr("id")
+   var csrf = $('input[name=csrfmiddlewaretoken]').val()
+
+
+   if(confirm("Are you sure you want to delete this item?")){
+     $.ajax({
+       url: $this.attr("href"),
+       method: "POST",
+       data: {
+         id,
+         csrfmiddlewaretoken: csrf
+       },
+       success: function(resp){
+         for(var i=0; i<100; i++){
+           $('tr#'+id+'').css('background-color', '#ccc');
+           $('tr#'+id+'').fadeOut('slow');
+         }          
+       },
+     });
+   }
+   return false;
+  }) 
+})
+
+
+
+{% comment %} $(document).ready(function(){
+  for(var i=0; i<100; i++){
+    //var mode = $('#module'+i)
+
+    $('#module'+i).on('click', function(e) {
+      alert($('#module'+i).val())
+    })
+
+  }
+
+} {% endcomment %}
+ 
+
+
+
+
+
+{% comment %} Delete fee type {% endcomment %}
+$(document).ready(function(){
+  $('.unassign').on('click', function(e) {
+   e.preventDefault()
+   
+   var $this = $(this)
+   var id = $this.attr("id")
+   var csrf = $('input[name=csrfmiddlewaretoken]').val()
+
+
+   if(confirm("Are you sure you want unassign member?")){
+     $.ajax({
+       url: $this.attr("href"),
+       method: "POST",
+       data: {
+         id,
+         csrfmiddlewaretoken: csrf
+       },
+       success: function(resp){
+         for(var i=0; i<100; i++){
+           $('tr#'+id+'').css('background-color', '#ccc');
+           $('tr#'+id+'').fadeOut('slow');
+         }          
+       },
+     });
+   }
+   return false;
+  }) 
+})
+
+
+
+
+$(document).ready(function(){
+  $('.des-delete').on('click', function(e) {
+   e.preventDefault()
+   
+   var $this = $(this)
+   var id = $this.attr("id")
+   var csrf = $('input[name=csrfmiddlewaretoken]').val()
+
+   if(confirm("Are you sure you want to delete this item?")){
+     $.ajax({
+       url: $this.attr("href"),
+       method: "POST",
+       data: {
+         id,
+         csrfmiddlewaretoken: csrf
+       },
+       success: function(resp){
+         for(var i=0; i<100; i++){
+           $('tr#'+id+'').css('background-color', '#ccc');
+           $('tr#'+id+'').fadeOut('slow');
+         }          
+       },
+     });
+   }
+   return false;
+  }) 
+})
+
+
+
+$(document).ready(function(){
+  $('.cur-delete').on('click', function(e) {
+   e.preventDefault()
+   
+   var $this = $(this)
+   var id = $this.attr("id")
+   var csrf = $('input[name=csrfmiddlewaretoken]').val()
+
+   if(confirm("Are you sure you want to delete this item?")){
+     $.ajax({
+       url: $this.attr("href"),
+       method: "POST",
+       data: {
+         id,
+         csrfmiddlewaretoken: csrf
+       },
+       success: function(resp){
+         for(var i=0; i<100; i++){
+           $('tr#'+id+'').css('background-color', '#ccc');
+           $('tr#'+id+'').fadeOut('slow');
+         }          
+       },
+     });
+   }
+   return false;
+  }) 
+})
+
+
+{% comment %} Delete Fee Item{% endcomment %}
+$(document).ready(function(){
+  $('.item-delete').on('click', function(e) {
+   e.preventDefault()
+   
+   var $this = $(this)
+   var id = $this.attr("id")
+   var csrf = $('input[name=csrfmiddlewaretoken]').val()
+
+   if(confirm("Are you sure you want to delete this item?")){
+     $.ajax({
+       url: $this.attr("href"),
+       method: "POST",
+       data: {
+         id,
+         csrfmiddlewaretoken: csrf
+       },
+       success: function(resp){
+         for(var i=0; i<100; i++){
+           $('tr#'+id+'').css('background-color', '#ccc');
+           $('tr#'+id+'').fadeOut('slow');
+         }          
+       },
+     });
+   }
+   return false;
+  }) 
+})
+
+
+
+
+$(document).ready(function(){
+  $('.mod-delete').on('click', function(e) {
+  e.preventDefault()
+  
+  var $this = $(this)
+  var id = $this.attr("id")
+  var csrf = $('input[name=csrfmiddlewaretoken]').val()
+
+  if(confirm("Are you sure you want to delete this item?")){
+    $.ajax({
+      url: $this.attr("href"),
+      method: "POST",
+      data: {
+        id,
+        csrfmiddlewaretoken: csrf
+      },
+      success: function(resp){
+        for(var i=0; i<100; i++){
+          $('tr#'+id+'').css('background-color', '#ccc');
+          $('tr#'+id+'').fadeOut('slow');
+        }          
+      },
+    });
+  }
+  return false;
+  }) 
+})
+
+
+
+
+$(document).ready(function(){
+  $('.spec-delete').on('click', function(e) {
+  e.preventDefault()
+  
+  var $this = $(this)
+  var id = $this.attr("id")
+  var csrf = $('input[name=csrfmiddlewaretoken]').val()
+
+  if(confirm("Are you sure you want to delete this item?")){
+    $.ajax({
+      url: $this.attr("href"),
+      method: "POST",
+      data: {
+        id,
+        csrfmiddlewaretoken: csrf
+      },
+      success: function(resp){
+        for(var i=0; i<100; i++){
+          $('tr#'+id+'').css('background-color', '#ccc');
+          $('tr#'+id+'').fadeOut('slow');
+        }          
+      },
+    });
+  }
+  return false;
+  }) 
+})
+
+
+
+
+{% comment %} Delete Receipt Details{% endcomment %}
+$(document).ready(function(){
+  $('.detail-delete').on('click', function(e) {
+  e.preventDefault()
+  
+  var $this = $(this)
+  var id = $this.attr("id")
+  var csrf = $('input[name=csrfmiddlewaretoken]').val()
+
+  if(confirm("Are you sure you want to delete this item?")){
+    $.ajax({
+      url: $this.attr("href"),
+      method: "POST",
+      data: {
+        id,
+        csrfmiddlewaretoken: csrf
+      },
+      success: function(resp){
+        for(var i=0; i<100; i++){
+          $('tr#'+id+'').css('background-color', '#ccc');
+          $('tr#'+id+'').fadeOut('slow');
+        }          
+      },
+    });
+  }
+  return false;
+  }) 
+})
+
+
+
+
+
+
+$(document).ready(function(){
+  $('#client_size').change(function(){
+
+    var client_id =  $('#client_size').val();
+    var url = "http://127.0.0.1:8000/api/client-size/";
+    var csrf = $('input[name=csrfmiddlewaretoken]').val()
+
+ 
+    $.ajax({
+      url: url,
+      method: "POST",
+      data: {
+        client_id,
+        csrfmiddlewaretoken: csrf
+      },
+      success: function(data){
+        alert("Done")    
+        console.log(data)    
+      },
+    });
+
+})
+})
+
+
+
+{% comment %} $(document).ready(function(){
+  $('#client_size').on('change', function(e) {
+
+  alert("Done") 
+  
+  var $this = $(this)
+  var client_id = $this.val()
+  var csrf = $('input[name=csrfmiddlewaretoken]').val()
+  alert(client_id) 
+/*
+  $.ajax({
+    url: "http://127.0.0.1:8000/api/client-size/",
+    method: "POST",
+    data: {
+      client_id,
+      csrfmiddlewaretoken: csrf
+    },
+    success: function(resp){
+      alert("Done")        
+    },
+  });
+*/
+  }) 
+}) {% endcomment %}
+
+
+
+
+
+
+
+
+
+$(document).ready(function(){
+  $('#duration').on('input', function(e) {
+   
+   var url = $("#paymentForm").attr("data-modula-url");
+   var size = $('#modula').val();
+   var duration = $(this).val();
+
+   $.ajax({
+     url: url,
+     data: {
+       'size': size,
+       'duration': duration,
+
+     },
+     success: function (data) {
+      // alert(data)
+      $("#skit").html(data);
+     }
+   });
+
+  }) 
+})
+
+
+
+
+
+
+
+
+{% comment %} {% endcomment %}
+
+
+
+
+
+  $(document).ready(function(){
+    $('#delete_assigned').click(function(){
+      var id = [];
+      var url = $("#delete_assigned").attr("data-remove-url");
+      var csrf = $('input[name=csrfmiddlewaretoken]').val()
+      $(':checkbox:checked').each(function(i){
+        id[i]=$(this).val()
+      })
+
+      if(id.length == 0){
+        alert("Please select item to delete")
+      }
+      else{
+        if(confirm("Are you sure you want to delete this item?")){
+
+          $.ajax({
+            url: url,
+            method: "POST",
+            data: {
+              id,
+              csrfmiddlewaretoken: csrf
+            },
+            success: function(response){
+              for(var i=0; i<id.length; i++){
+                $('tr#'+id[i]+'').css('background-color', '#ccc');
+                $('tr#'+id[i]+'').fadeOut('slow');
+              }
+            } 
+          })   
+    }
+  }
+  })
+})
+
+
+
+
+$(document).ready(function(){
+  $('.foo').change(function(){
+    var id = [];
+    var url = $("#delete_invoice").attr("data-pop-url");
+    var csrf = $('input[name=csrfmiddlewaretoken]').val()
+    $(':checkbox:checked').each(function(i){
+      id[i]=$(this).val()
+    })
+
+    alert(id)
+
+  /*    if(id.length == 0){
+      alert("Please select item to delete")
+    }
+
+
+
+  else{
+      if(confirm("Are you sure you want to delete this item?")){
+
+        $.ajax({
+          url: url,
+          method: "POST",
+          data: {
+            id,
+            csrfmiddlewaretoken: csrf
+          },
+          success: function(response){
+            for(var i=0; i<id.length; i++){
+              $('tr#'+id[i]+'').css('background-color', '#ccc');
+              $('tr#'+id[i]+'').fadeOut('slow');
+            }
+          } 
+        })   
+  }
+}
+*/
+
+})
+})
+
+
+
+
+$(document).ready(function(){
+  $("#fee_type_id").change(function () {
+    var url = $("#myFormID").attr("data-items-url");
+    var fee_type = $(this).val();
+
+    $.ajax({
+      url: url,
+      data: {
+        'fee_type': fee_type,
+      },
+      success: function (data) {
+        $("#fee_items").html(data);
+      }
+    });
+
+  });
+})
+
+
+$(document).ready(function(){
+  $("#user_member").change(function () {
+    var url = $("#makePaymentForm").attr("data-fee-url");
+    var member = $(this).val();
+
+    $.ajax({
+      url: url,
+      data: {
+        'member': member,
+      },
+      success: function (data) {
+        $("#fee_type").html(data);
+      }
+    });
+
+  });
+})
+
+
+$(document).ready(function(){
+  $("#fee_type").change(function () {
+    var url = $("#makePaymentForm").attr("data-balance-url");
+    var member = $("#user_member").val();
+    var fee_type = $(this).val();
+
+    $.ajax({
+      url: url,
+      data: {
+        'fee_type': fee_type,
+        'member': member,
+      },
+      success: function (data) {
+        $("#user_type").html(data);
+      }
+    });
+
+  });
+})
+
+
+
+$(document).ready(function(){
+  $("#fee_type").change(function () {
+    var url = $("#assignPaymentForm").attr("data-invoice-url");
+    var branch = $("#branch").val();
+    var member_category = $("#member_category").val();
+    var group = $("#group").val();
+    var subgroup = $("#subgroup").val();
+
+    var fee_type = $(this).val();
+
+    $.ajax({
+      url: url,
+      data: {
+        'branch': branch,
+        'member_category': member_category,
+        'group': group,
+        'subgroup': subgroup,
+        'fee_type': fee_type,
+      },
+      success: function (data) {
+         // alert(data)
+         $("#total").val(data);
+      }
+    });
+
+});
+
+})
+
+
+
+
+
+$(document).ready(function(){
+  $("#numver").change(function () {
+    var url = $("#paymentForm").attr("data-amount-url");
+    var id = $("#paymentForm").attr("data-id");
+    var range = $('input[name="install_range"]:checked').val();
+  //  var range = $(".range").val();
+  
+    var period = $(this).val();
+
+    $.ajax({
+      url: url,
+      data: {
+        'id': id,
+        'range': range,
+        'period': period,
+      },
+      success: function (data) {
+         // alert(data)
+         $("#total_amount_due").val(data);
+      }
+    });
+
+});
+
+})
+
+
+
+$(document).ready(function(){
+  $("#payment_status").change(function () {
+    var url = $("#paymentForm").attr("data-credit-url");
+    var member = $("#member").val();
+    var paid = $("#paid")
+    var total_amount_due = $("#total_amount_due")
+
+    $.ajax({
+      url: url,
+      data: {
+        'member': member,
+
+      },
+      success: function (data) {
+         // alert(data)
+         $("#balance").val(data);
+
+         $("#paid").val(parseInt($("#total_amount_due").val()) - parseInt(data))
+         if(parseInt($("#paid").val()) < 0){
+          $("#paid").val(0)
+          }
+      }
+    });
+
+});
+
+})
+
+
+
+
+
+
+{% comment %} $(document).ready(function(){
+
+  $("#membership").change(function () {
+    var url = $("#paymentForm").attr("data-size-url");
+    var mode = $("#membership").val();
+
+
+    $.ajax({
+      url: url,
+      data: {
+        'mode': mode,
+      },
+
+      success: function (data) {
+        // alert(data)
+        $("#amt").html(data);
+         
+      }
+    });
+
+
+});
+}) {% endcomment %}
+
+
+
+
+
+
+$(document).ready(function(){
+  $("#client_size").change(function () {
+
+    var url = $("#paymentForm").attr("data-modulo-url");
+    var client_id = $("#client_size").val();
+
+    $.ajax({
+      url: url,
+      data: {
+        'client_id': client_id,
+      },
+
+      success: function (data) {
+        $("#modula").val(data);
+
+         
+      }
+    });
+
+});
+})
+
+
+
+
+
+{% comment %} $(document).ready(function(){
+  $("#modula").change(function () {
+    var url = $("#paymentForm").attr("data-modulo-url");
+    var mode = $("#modulo").val();
+
+
+    $.ajax({
+      url: url,
+      data: {
+        'mode': mode,
+      },
+
+      success: function (data) {
+         //alert(data)
+         $("#skim").html(data);
+         
+      }
+    });
+
+});
+}) {% endcomment %}
+
+
+
+$(document).ready(function(){
+  $("#module").change(function () {
+    var url = $("#paymentForm").attr("data-items-url");
+    var mode = $("#module").val();
+
+
+    $.ajax({
+      url: url,
+      data: {
+        'mode': mode,
+      },
+
+      success: function (data) {
+       
+         $("#test").html(data);
+         
+      }
+    });
+
+});
+
+})
+
+/*
+$(document).ready(function(){
+  $("#unit_amount_usd").input(function () {
+    var url = $("#paymentForm").attr("data-exchange-url");
+    var amount = $("#unit_amount_usd").val();
+
+
+    $.ajax({
+      url: url,
+      data: {
+        'amount': amount,
+      },
+
+      success: function (data) {
+         alert(data)
+         $("#unit_amount_ghs").val(data);
+         
+      }
+    });
+
+});
+
+
+
+})
+*/
+
+
+
+$(document).ready(function(){
+  $("#page").change(function () {
+    var url = $("#pageForm").attr("data-page-url");
+    var page_number = $(this).val();
+
+    $.ajax({
+      url: url,
+      data: {
+        'page_number': page_number,
+      },
+      success: function (data) {
+        
+      }
+    });
+
+});
+
+})
+
+
+
+
+
+
+/*
+$(document).ready(function(){
+  if (!localStorage.getItem("token")){
+    window.location.href = '/';
+  }
+})
+*/
+
+{% comment %} Members PerPage {% endcomment %}
+
+
+$(document).ready(function(){
+
+$("#per_page").change(function(){
+  var value=$(this).val();
+
+  window.location.href="?page=1&per_page="+value
+
+})
+})
+
+
+
+$(document).ready(function(){
+
+  $(".pagination li").click(function(){
+    var pagenumber=this.id
+    var perpage=$("#per_page").val()
+
+    window.location.href="?page="+pagenumber+"&per_page="+perpage
+  
+  })
+  })
+
+
+
+
+
+$(document).ready(function(){
+
+  $("#year_range").change(function(){
+    var year_range=$(this).val();
+  
+    window.location.href="?year_range="+year_range
+  
+  })
+  })
+
+
+
+
+$(document).ready(function(){})
+$(document).ready(function(){})
+
+
+
+</script>
+{% comment %} <script>
+  {% block script %}
+
+  {% endblock %}
+</script> {% endcomment %}
+
+
+
+ {% comment %} <script>
+  var today = new Date();
+  var dd = today.getDate();
+  var mm = today.getMonth()+1; 
+  var yyyy = today.getFullYear();
+   if(dd<10){
+          dd='0'+dd
+      } 
+      if(mm<10){
+          mm='0'+mm
+      } 
+  
+  today = yyyy+'-'+mm+'-'+dd;
+  document.getElementById("start_date").setAttribute("min", today);
+  
+ </script> {% endcomment %}
+
+    </body>
+ 
+</html>
+
+
