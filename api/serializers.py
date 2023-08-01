@@ -38,6 +38,8 @@ class EmailSerializer(serializers.Serializer):
 
 class GroupSerializer(serializers.Serializer):
     # token = serializers.CharField()
+    client_id = serializers.CharField()
+    branch = serializers.CharField()
     group_name = serializers.CharField()
     file = serializers.FileField()
 
@@ -54,10 +56,6 @@ class ContactGroupSerializer(serializers.ModelSerializer):
         model = ContactGroups
         fields = ('group_name')
 
-
-
-# class GroupSerializer(serializers.Serializer):
-#     group_name = serializers.CharField()
 
 
 
@@ -123,7 +121,7 @@ class PostSerializer(serializers.Serializer):
         recurring = data_dict.get('recurring')
         description = data_dict.get('description')
 
-        if message_type == "email":
+        if message_type == "email" or "Email":
             if 'emails' not in data_keys:
                 raise ValidationError("Field 'emails' are required for email messages")
 
@@ -137,7 +135,7 @@ class PostSerializer(serializers.Serializer):
                 raise ValidationError("Field 'subject' is required for the email")
 
 
-        if message_type == "sms": 
+        if message_type == "sms" or "SMS": 
             if 'contacts' not in data_keys:
                 raise ValidationError("Field 'contacts' are required for SMS messages")
 
@@ -145,7 +143,7 @@ class PostSerializer(serializers.Serializer):
                 raise ValidationError("Field 'main_message' is required for SMS messages")
 
 
-        if message_type == "audio":
+        if message_type == "audio" or "Audio":
             if 'audio_url' not in data_keys:
                 raise ValidationError("Field 'audio_url' is required to send audio")
 
@@ -154,7 +152,7 @@ class PostSerializer(serializers.Serializer):
 
 
 
-        if message_type == "websms":
+        if message_type == "websms" or "WebSMS":
             if 'web_message' not in data_keys:
                 raise ValidationError("Field 'web_message' is required to WebSMS messages")
 
@@ -188,15 +186,12 @@ class PostSerializer(serializers.Serializer):
 class TopUpSerializer(serializers.Serializer):
     client_id = serializers.CharField()
     service_type = serializers.CharField()
-    account_type = serializers.CharField()
     branch = serializers.CharField()
-    currency = serializers.CharField()
     amount_paid = serializers.FloatField()
-    agree_to_terms = serializers.BooleanField()
 
-    def validate_agree_to_terms(self, value):
+    def validate_service_type(self, value):
         if value == False:
-            raise ValidationError("You need to agree to the terms")
+            raise ValidationError("You need to add service type")
         return value   
 
 

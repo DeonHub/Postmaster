@@ -1,22 +1,17 @@
 import csv
 import datetime
 import io
-from rest_framework import viewsets
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
 from rest_framework import status
 from .serializers import *
 from .models import *
 from rest_framework.views import APIView
-from postman.models import Post, ContactGroups, ServiceTypes, TopUps, Credits, ActivityLog
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from itertools import chain
+from postman.models import Post, ContactGroups, ServiceTypes, TopUps, Credits
 import requests
 import json
-from django.core.mail import send_mail, EmailMessage, EmailMultiAlternatives
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.conf import settings
-from django.shortcuts import redirect, render, get_object_or_404
-from postman.views import webpage
+from django.shortcuts import render, get_object_or_404
 import pyshorteners
 import environ
 
@@ -26,39 +21,35 @@ environ.Env.read_env()
 
 
 
+def remove_non_numeric(string):
+    return ''.join(filter(str.isdigit, string))
 
 
-def makePayment(order_id, description, amount, currency):
+def makePayment(description, amount_paid, order_id):
 
-    url = "https://manilla.nsano.com/checkout/payment"
+    url = "https://payproxyapi.hubtel.com/items/initiate"
+
+    returnUrl = f"https://akwaabasoftware.com/"
+
 
     payload = json.dumps({
-    "order_id": order_id,
-    "description": description,
-    "amount": amount,
-    "currency": currency,
-
-    "services": {
-        "mobile_money": True,
-        "cards": True,
-        "bank": True
-     },
-    
-
-    "return_url": "https://transactions.akwaabasoftware.com/add-transaction/",
-    "cancel_url": "/"
-
-    })
+            "totalAmount": amount_paid,
+            "description": description,
+            "callbackUrl": "https://transactions.akwaabasoftware.com/add-transaction/",
+            "returnUrl": returnUrl,
+            "merchantAccountNumber": "2017254",
+            "cancellationUrl": "https://hubtel.com/",
+            "clientReference": order_id
+        })
 
 
     headers = {
-        'Authorization': 'Bearer 300147706867',
-        'Content-Type': 'application/json'
+    'Authorization': 'Basic UDc5RVdSVzozNmZmNzk3YTgyMjU0NzJmOTA2ZGU0NGM3NGVkZWE0Zg==',
+    'Content-Type': 'application/json'
     }
 
-    # response = requests.request("POST", url, headers=headers, data=payload).json()
-    response = requests.request("POST", url, headers=headers, data=payload).json()['data']['links']['checkout_url']
-    # print(response)
+
+    response = requests.request("POST", url, headers=headers, data=payload).json()['data']['checkoutUrl']
 
     return response
     
@@ -98,10 +89,6 @@ class SetEmailDetails(APIView):
 
 
 
-
-
-
-
 class ContactGroup(APIView):
 
     def get_contact_by_pk(self, pk):
@@ -127,35 +114,20 @@ class ContactGroup(APIView):
     #     return Response(error, status=status.HTTP_400_BAD_REQUEST) 
  
 
+    def get(self, request, **kwargs):
+    
+        client_id=kwargs.get('client_id')
+        branch=kwargs.get('branch')
 
-
-    def get(self, request):
-        # kron = {
-        #     "success": False,
-        #     "message": "No contact groups created"
-        #     }
-
-        # try:
-        #     if len(Nameken.objects.all()) > 0:
-
-        member = Nameken.objects.all().first()
-        all_heroes = ContactGroups.objects.all()
+        all_heroes = ContactGroups.objects.filter(client_id=client_id, branch=branch)
         heroes = ContactGroupSerializer(all_heroes, many=True)
+
+        info = {
+            "count" : len(ContactGroups.objects.all()),
+            "data": heroes.data
+        }
         
-        return Response(heroes.data)
-
-
-        #     else:
-        #         pass
-        # except:
-        #         error = {
-        #             "success": False,
-        #             "message": "No contact groups created"
-        #             }
-        #         return Response(error, status=status.HTTP_400_BAD_REQUEST) 
-
-        # return Response(error, status=status.HTTP_400_BAD_REQUEST)  
-
+        return Response(info)
 
 
 
@@ -165,81 +137,58 @@ class ContactGroup(APIView):
 
 
         if new_group.is_valid():
-            token = new_group.data['token']
+            client_id = new_group.data['client_id']
+            branch = new_group.data['branch']
             group_name = new_group.data['group_name']
 
             try:
-                passed_token = Nameken.objects.get(token=token)
+                data = request.FILES['data']
+                file = new_group.data['file']
 
-                if today < passed_token.expiry_date:
-                    member = passed_token.name
+                if not file.name.endswith('.csv'):
+                    return Response({
+                        "error": "File selected is not a CSV"
+                    }, status=status.HTTP_404_NOT_FOUND)  
 
-                    try:
-                        # data = request.FILES['data']
-                        file = new_group.data['file']
+                try:
+                    data_set = file.read().decode('UTF-8')
+                    io_string = io.StringIO(data_set)
+                    next(io_string)
 
-                        if not file.name.endswith('.csv'):
-                            return Response({
-                                "error": "File selected is not a CSV"
-                            }, status=status.HTTP_404_NOT_FOUND)  
+                    for column in csv.reader(io_string, delimiter=",", quotechar="|"):
+                        _, created = ContactGroups.objects.update_or_create(
+                                    client_id=client_id,
+                                    branch=branch,
+                                    group_name=group_name,
+                                    firstname=column[0],
+                                    othername=column[1],
+                                    email=column[2],
+                                    contact=column[3],
+                                    sent_by="Admin"
+                        )
 
-                        try:
-                            data_set = file.read().decode('UTF-8')
-                            io_string = io.StringIO(data_set)
-                            next(io_string)
+                    data = {
+                            "success": True,
+                            "message": "Contact group created successfully",
+                        }
 
-                            for column in csv.reader(io_string, delimiter=",", quotechar="|"):
-                                _, created = ContactGroups.objects.update_or_create(
-                                            group_name=group_name,
-                                            firstname=column[0],
-                                            othername=column[1],
-                                            email=column[2],
-                                            contact=column[3],
-                                            sent_by=member,
+                    return Response(data, status=status.HTTP_200_OK)
 
-                                )
+                except csv.Error as e:
+                    raise Exception(e)    
 
-                            data = {
-                                    "success": True,
-                                    "message": "Contact group created successfully",
-                                }
-
-                            return Response(data, status=status.HTTP_200_OK)
-
-                        except csv.Error as e:
-                            raise Exception(e)    
-
-                    except Exception as e:
-                        raise Exception("You need to provide a file ")
-                 
-                    
-                else:
-                    passed_token.delete()
-
-                    expired = {
-                        "success": False,
-                        "message": "Expired token"
-                    }
-
-                    return Response(expired, status=status.HTTP_400_BAD_REQUEST)
-
-            except:
-                error = {
-                    "success": False,
-                    "message": "Invalid token"
-                    }
-                return Response(error, status=status.HTTP_400_BAD_REQUEST)       
-
+            except Exception as e:
+                raise Exception("You need to provide a file ")
+                       
         else:    
             return Response(new_group.errors, status=status.HTTP_400_BAD_REQUEST)  
-
-
 
 
 
 class TopUpCredit(APIView):
 
     def post(self, request, *args):
+        now = datetime.datetime.now()
         year = datetime.datetime.now().year
         year = str(year) + "0000"
         
@@ -249,37 +198,22 @@ class TopUpCredit(APIView):
             client_id=info.data['client_id']
             branch=info.data['branch']
             service_type=info.data['service_type']
-            account_type=info.data['account_type']
-            currency=info.data['currency']
-
-            amount_paid=info.data['amount_paid']
-            amount_paid = float(amount_paid)
+            amount_paid = float(info.data['amount_paid'])
 
 
-            service = ServiceTypes.objects.get(service_type=service_type)
-            available = float(amount_paid) // float(service.unit_amount_ghs)
+            order_id = remove_non_numeric(str(now))
 
-            # available = round(available, 2)
-            available = int(available)
-
-            print(available)
-
-            top_ups = TopUps.objects.create(client_id=client_id, service_type=service_type, branch=branch, amount_paid=amount_paid)
+            top_ups = TopUps.objects.create(client_id=client_id, service_type=service_type.lower(), branch=branch, amount_paid=amount_paid, order_id=order_id)
             top_ups.save()
 
-            order_id = f'PMS{int(year)+top_ups.id}'
-
-            top_ups.order_id = order_id  
-            top_ups.save() 
 
             description = f"Top up {service_type} credits"
 
-            resp = makePayment(order_id, description, amount_paid, currency)
+            resp = makePayment(description, amount_paid, order_id)
 
 
             data = {
                 "success": True,
-                # "msg": "Purchase successful"
                 "order_id": order_id,
                 "payment_url": resp   
                 }   
@@ -291,7 +225,6 @@ class TopUpCredit(APIView):
 
 
 
-
 class AddCredit(APIView):
     
     def post(self, request, *args):
@@ -299,78 +232,81 @@ class AddCredit(APIView):
         info = AddCreditSerializer(data=request.data)
 
         if info.is_valid():
+
             client_id=info.data['client_id']
             order_id=info.data['order_id']
             branch=info.data['branch']
             service_type=info.data['service_type']
-            
-            try:
-                credit = TopUps.objects.get(order_id=order_id)
-                
-                amount_paid = float(credit.amount_paid)
-                
-                service = ServiceTypes.objects.get(service_type=service_type)
 
-                available = float(amount_paid) // float(service.unit_amount_ghs)
+            url = f"https://transactions.akwaabasoftware.com/transactions/{order_id}/"
+            payload = {}
+            headers = {}
 
-                available = int(available)
-                # print(available)
+            paid = requests.request("GET", url, headers=headers, data=payload).json()['success']
 
-                credit_url = f"https://transactions.akwaabasoftware.com/transactions/order_id={order_id}/"
+            if paid == True:
 
-                payload = {}
-                headers = {}
+                try:
+                    credit = TopUps.objects.get(order_id=order_id)
 
-                response = requests.request("GET", credit_url, headers=headers).json()['success']
-                # print(response)
+                    if credit.confirmed:
 
-                # response = True
+                        data = {
+                            "msg": "Order has already been confirmed",
+                            "order_id": order_id
+                        } 
+                        return Response(data, status=status.HTTP_200_OK)
+                    
+                    else:
+                        
+                        amount_paid = float(credit.amount_paid)
+                        
+                        service = ServiceTypes.objects.filter(service_type=service_type).first()
+
+                        available = float(amount_paid) // float(service.unit_amount_ghs)
+
+                        available = int(available)
+                        
+                        try:
+                            cred = Credits.objects.get(client_id=client_id, service_type=credit.service_type, branch=credit.branch)
+                            cred.available_units += available 
+                            cred.save()
+
+                        except:
+                            print("In exvept")
+                            cred = Credits.objects.create(client_id=client_id, service_type=credit.service_type, branch=credit.branch, available_units=available)
+                            cred.save() 
 
 
-                if response == True:
+                        credit.confirmed = True  
+                        credit.save() 
 
-                    try:
-                        cred = Credits.objects.get(client_id=client_id, service_type=service_type, branch=branch)
-                        cred.available_units += available 
-                        cred.save()
+                        data = {
+                            "success": True,
+                            "msg": f"{credit.service_type} credit updated successfully",
+                            "order_id": order_id
+                        } 
 
-                    except:
-                        print("In exvept")
-                        cred = Credits.objects.create(client_id=client_id, service_type=service_type, branch=branch, available_units=available)
-                        cred.save() 
+                        return Response(data, status=status.HTTP_200_OK)
 
-                    credit.confirmed = True  
-                    credit.save() 
-
-                    data = {
-                        "success": True,
-                        "msg": f"{service_type} credit purchase successful",
-                        "order_id": order_id,
-                        # "payment_url": resp   
-                    } 
-
-                    return Response(data, status=status.HTTP_200_OK)
-
-                else:
+                        
+                except:
                     data = {
                         "success": False,
-                        "msg": "Purchase does not exist. Please try again after sometime", 
+                        "msg": "Purchase does not exist.",
                     }   
 
-                    return Response(data, status=status.HTTP_200_OK)  
-
-            except:
+                    return Response(data, status=status.HTTP_200_OK)   
+            
+            else:
                 data = {
                     "success": False,
-                    "msg": "Purchase does not exist. Outside",
+                    "msg": "Purchase does not exist. Please try again after sometime or contact admin", 
                 }   
 
-                return Response(data, status=status.HTTP_200_OK)   
-
+                return Response(data, status=status.HTTP_400_BAD_REQUEST)  
         else:    
             return Response(info.errors, status=status.HTTP_400_BAD_REQUEST)    
-
-
 
 
 
@@ -391,9 +327,6 @@ class PurchaseHistory(APIView):
         
         return Response(info, status=status.HTTP_200_OK)
 
-    
-
-
 
 
 
@@ -401,72 +334,32 @@ class GetCredits(APIView):
     
     def get(self, request, *args, **kwargs):
         
-        # info = CreditsSerializer(data=request.data)
-
-        # if info.is_valid():
-
         client_id=kwargs.get('client_id')
         branch=kwargs.get('branch')
-
-        # print(Credits.objects.get(client_id=client_id, branch=branch))
+        data = []
 
         try:
 
-            krat = Credits.objects.filter(client_id=client_id, branch=branch)
-
-            if len(krat) > 0:
-                try:
-                    # Available sms
-                    temp_sms = Credits.objects.get(client_id=client_id, branch=branch, service_type="SMS").available_units
-                except:
-                    temp_sms = 0
-
-                try:    
-                    temp_email = Credits.objects.get(client_id=client_id, branch=branch, service_type="Email").available_units
-                except:
-                    temp_email = 0
-
-                try:
-                    temp_audio = Credits.objects.get(client_id=client_id, branch=branch, service_type="Audio").available_units
-                except:
-                    temp_audio = 0
-
-                try:    
-                    temp_websms = Credits.objects.get(client_id=client_id, branch=branch, service_type="WebSMS").available_units
-                except:
-                    temp_websms = 0
-
-
-                data = {
-                    "success": True,
-                    "data": [{
-                        "Service type": "SMS",
-                        "Available units": temp_sms
-                        },
-                        {
-                        "Service type": "Email",
-                        "Available units": temp_email
-                        },
-                        {
-                        "Service type": "Audio",
-                        "Available units": temp_audio
-                        },
-                        {
-                        "Service type": "WebSMS",
-                        "Available units": temp_websms
-                        }
-                        ]
-                    }   
-
-                return Response(data, status=status.HTTP_200_OK)
+            credits = Credits.objects.filter(client_id=client_id, branch=branch)
+            
+            if credits:
+                for credit in credits:
+                    data.append({
+                        "service_type": credit.service_type,
+                        "available_units": credit.available_units
+                    }) 
 
             else:
-                info = {
-                    "success" : False,
-                    "msg": "Invalid client id or branch"
-                }
-                
-                return Response(info)
+                pass
+
+            info = {
+                    "success": True,
+                    "data": data
+                    }   
+
+            return Response(info, status=status.HTTP_200_OK)
+            
+
         except:
             info = {
                 "success" : False,
@@ -474,6 +367,8 @@ class GetCredits(APIView):
             }
             
             return Response(info)   
+
+
 
 
 class GetPosts(APIView):
@@ -492,7 +387,6 @@ class GetPosts(APIView):
         }
         
         return Response(info)
-
 
 
 
@@ -676,29 +570,31 @@ class SendPosts(APIView):
             # print(subject)
             try:
                 # Available sms
-                temp_sms = Credits.objects.get(client_id=client_id, branch=branch, service_type="SMS")
+                temp_sms = Credits.objects.get(client_id=client_id, branch=branch, service_type="SMS" or "sms")
                 available_sms = temp_sms.available_units
             except:
                 available_sms = 0
 
             try:    
-                temp_email = Credits.objects.get(client_id=client_id, branch=branch, service_type="Email")
+                temp_email = Credits.objects.get(client_id=client_id, branch=branch, service_type="Email" or "email")
                 available_email = temp_email.available_units
             except:
                 available_email = 0
 
             try:
-                temp_audio = Credits.objects.get(client_id=client_id, branch=branch, service_type="Audio")
+                temp_audio = Credits.objects.get(client_id=client_id, branch=branch, service_type="Audio" or "audio")
                 available_audio = temp_audio.available_units
             except:
                 available_audio = 0
 
 
             try:    
-                temp_websms = Credits.objects.get(client_id=client_id, branch=branch, service_type="WebSMS")
+                temp_websms = Credits.objects.get(client_id=client_id, branch=branch, service_type="WebSMS" or "websms")
                 available_websms = temp_websms.available_units
             except:
                 available_websms = 0
+
+
 
             # temp_sms = Credits.objects.get(client_id=client_id, branch=branch, service_type="SMS")
             # available_sms = temp_sms.available_units
@@ -1016,7 +912,7 @@ class SendPosts(APIView):
                                 url = env('SMS_URL')
 
                                 for i in senders_numbers:
-                                    base_url = "http://127.0.0.1:8000/"
+                                    base_url = "https://postmaster.akwaabasoftware.com/"
                                     sid = f'{int(year)+added_post.id}'
                                     weblink = base_url + f'api/websms/{sid}/t={i}'
 
@@ -1246,7 +1142,7 @@ class SendPosts(APIView):
                                 url = env('SMS_URL')
 
                                 for i in senders_numbers:
-                                    base_url = "http://127.0.0.1:8000/"
+                                    base_url = "https://postmaster.akwaabasoftware.com/"
                                     sid = f'{int(year)+added_post.id}'
                                     weblink = base_url + f'api/websms/{sid}/t={i}'
 
@@ -1289,7 +1185,6 @@ class SendPosts(APIView):
 
 
 
-
 def viewWebmail(request, **kwargs):
 
     template_name = 'postman/view-webmail.html'
@@ -1320,112 +1215,6 @@ def viewWebmail(request, **kwargs):
 
 
 
-
-# class AssignDuty(APIView):
-
-#     def post(self, request, *args):
-    
-#         new_duty = AssignDutySerializer(data=request.data)
-
-#         if new_duty.is_valid():
-#             branch = new_duty.data['branch']
-#             member_category = new_duty.data['member_category']
-#             group = new_duty.data['group']
-#             subgroup = new_duty.data['subgroup']
-#             member = new_duty.data['member']
-#             message = new_duty.data['message']
-#             file = new_duty.data['file']
-#             start_date = new_duty.data['start_date']
-#             end_date = new_duty.data['end_date']
-#             start_time = new_duty.data['start_time']
-#             end_time = new_duty.data['end_time']
-#             duty_subject = new_duty.data['duty_subject']
-#             new_subject = new_duty.data['new_subject']
-#             self_assigned = new_duty.data['self_assigned']
-#             reassigned = new_duty.data['reassigned']
-#             assigned = new_duty.data['assigned']
-#             reassigned_to = new_duty.data['reassigned_to']
-#             reassigned_from = new_duty.data['reassigned_from']
-            
-            
-#             assigned_duty = AssignedDutyActivities.objects.create(
-#                 branch=branch,
-#                 member_category=member_category,
-#                 group=group,
-#                 subgroup=subgroup,
-#                 member=member,
-#                 message=message,
-#                 file=file,
-#                 start_date=start_date,
-#                 end_date=end_date,
-#                 start_time=start_time,
-#                 end_time=end_time,
-#                 duty_subject=duty_subject,
-#                 new_subject=new_subject,
-
-#                 assigned=assigned,
-#                 self_assigned=self_assigned,
-#                 reassigned=reassigned,
-#                 reassigned_to=reassigned_to,
-#                 reassigned_from=reassigned_from,
- 
-#             )
-            
-#             assigned_duty.save()
-
-#             return Response(new_duty.data, status=status.HTTP_200_OK)
-#         else:
-#             return Response(new_duty.errors, status=status.HTTP_400_BAD_REQUEST)  
-
-
-
-
-
-
-# class AddComment(APIView):
-
-#     def get_duty_by_pk(self, pk):
-
-#         try:
-#             return AssignedDutyActivities.objects.get(pk=pk)
-#         except:
-#             return Response({
-#                 "error": "Duty does not exist"
-#             }, status=status.HTTP_404_NOT_FOUND)   
-
-    
-#     def post(self, request, pk):
-
-#         # assigned_duty = self.get_duty_by_pk(pk)
-#         assigned_duty = AssignedDutyActivities.objects.get(pk=pk)
-#         report = CommentSerializer(data=request.data)
-
-#         if report.is_valid():
-#             try:
-#                 rating = report.data['rating']
-#             except:    
-#                 rating = ""
-#             try:
-#                 remarks = report.data['remarks'] 
-#             except:
-#                 remarks = ""
-
-
-#             if rating != "":
-#                 assigned_duty.rating = rating
-#                 assigned_duty.save()
-
-#             if remarks != "":
-#                 assigned_duty.remarks = remarks
-#                 assigned_duty.save()
-
-
-#             return Response(report.data)
-#         else:
-#             return Response(report.errors, status=status.HTTP_400_BAD_REQUEST)    
-
-
-
 class ViewServiceTypes(APIView):
     
     def get(self, request):
@@ -1438,10 +1227,3 @@ class ViewServiceTypes(APIView):
         }
         
         return Response(info)
-
-
-
-
-
-
-  
